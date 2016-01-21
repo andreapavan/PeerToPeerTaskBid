@@ -1,4 +1,4 @@
--module(examples).
+-module(test).
 -export([fac/1, average/1, double/1, member/2, averageAcc/1, allsame/1]).
 
 fac(0) -> 1;
@@ -31,4 +31,4 @@ average([], Length, Sum) -> Sum / Length.
 
 allsame([]) -> true;
 allsame([_]) -> true;
-allsame([H,H|T]) -> allsame([H|T]). 
+allsame([H,H|T]) -> allsame([H|T]).
