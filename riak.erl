@@ -1,14 +1,20 @@
 -module(riak).
--export([testLib/0, start/0, setObject/3, getObject/2, updateObject/3, deleteObject/2]).
+-export([testLib/0, start/2, setObject/3, getObject/2, updateObject/3, deleteObject/2]).
 
 testLib() -> code:which(riakc_pb_socket).
 
-start() ->
-	{ok, Pid} = riakc_pb_socket:start_link("127.0.0.1", 10017).
+start(Host, Port) ->
+	try
+		{ok, Pid} = riakc_pb_socket:start_link(Host, Port),
+		ets:new(config_table, [named_table, protected, set, {keypos, 1}]),
+	  	ets:insert(config_table, {pid, Pid})
+	catch
+		Exception:Reason -> {caught, Exception, Reason}
+	end.
 
 setObject(Bucket, Key, Value) ->
 	try
-		{ok, Pid} = riakc_pb_socket:start_link("127.0.0.1", 10017),
+		[{_, Pid}] = ets:lookup(config_table, pid),
 		Obj = riakc_obj:new(atom_to_binary(Bucket, latin1), atom_to_binary(Key, latin1), atom_to_binary(Value, latin1)),
 		riakc_pb_socket:put(Pid, Obj)
 	catch
@@ -17,7 +23,7 @@ setObject(Bucket, Key, Value) ->
 
 getObject(Bucket, Key) ->
 	try
-		{ok, Pid} = riakc_pb_socket:start_link("127.0.0.1", 10017),
+		[{_, Pid}] = ets:lookup(config_table, pid),
 		{ok, Obj} = riakc_pb_socket:get(Pid, atom_to_binary(Bucket, latin1), atom_to_binary(Key, latin1))
 	catch
 		Exception:Reason -> {caught, Exception, Reason}
@@ -25,7 +31,7 @@ getObject(Bucket, Key) ->
 
 deleteObject(Bucket, Key) ->
 	try
-		{ok, Pid} = riakc_pb_socket:start_link("127.0.0.1", 10017),
+		[{_, Pid}] = ets:lookup(config_table, pid),
 		riakc_pb_socket:delete(Pid, atom_to_binary(Bucket, latin1), atom_to_binary(Key, latin1))
 	catch
 		Exception:Reason -> {caught, Exception, Reason}
@@ -33,7 +39,7 @@ deleteObject(Bucket, Key) ->
 
 updateObject(Bucket, Key, NewValue) ->
 	try
-		{ok, Pid} = riakc_pb_socket:start_link("127.0.0.1", 10017),
+		[{_, Pid}] = ets:lookup(config_table, pid),
 		{ok, Oa} = riakc_pb_socket:get(Pid, atom_to_binary(Bucket, latin1), atom_to_binary(Key, latin1)),
 		Ob = riakc_obj:update_value(Oa, atom_to_binary(NewValue, latin1)),
 		{ok, Oc} = riakc_pb_socket:put(Pid, Ob, [return_body])
