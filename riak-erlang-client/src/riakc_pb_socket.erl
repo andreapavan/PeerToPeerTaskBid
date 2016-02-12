@@ -137,7 +137,7 @@
 -endif.
 
 -ifdef(deprecated_now).
--define(NOW, erlang:system_time(micro_seconds)).
+-define(NOW, erlang:now()).
 -else.
 -define(NOW, erlang:now()).
 -endif.
