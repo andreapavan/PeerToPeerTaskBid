@@ -1,5 +1,5 @@
 -module(riak).
--export([testLib/0, start/2, setObject/3, getObject/2, updateObject/3, deleteObject/2]).
+-export([testLib/0, start/2, setObject/3, getObject/2, updateObject/3, deleteObject/2, listObject/1]).
 
 % Check the library for Riak Client
 testLib() -> code:which(riakc_pb_socket).
@@ -53,6 +53,17 @@ updateObject(Bucket, Key, NewValue) ->
 		{ok, Oa} = riakc_pb_socket:get(Pid, atom_to_binary(Bucket, latin1), atom_to_binary(Key, latin1)),
 		Ob = riakc_obj:update_value(Oa, NewValue),
 		{ok, Oc} = riakc_pb_socket:put(Pid, Ob, [return_body])
+	catch
+		Exception:Reason -> {caught, Exception, Reason}
+	end.
+
+% listObject(Bucket)
+% {Bucket} as string
+listObject(Bucket) ->
+	try
+		[{_, Pid}] = ets:lookup(config_table, pid),
+		{ok, Obj} = riakc_pb_socket:list_keys(Pid, atom_to_binary(Bucket, latin1))
+		
 	catch
 		Exception:Reason -> {caught, Exception, Reason}
 	end.
