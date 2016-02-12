@@ -1,8 +1,10 @@
 -module(riak).
 -export([testLib/0, start/2, setObject/3, getObject/2, updateObject/3, deleteObject/2]).
 
+% Check the library for Riak Client
 testLib() -> code:which(riakc_pb_socket).
 
+% Start connection with Riak Node identified by {Host, Port}
 start(Host, Port) ->
 	try
 		{ok, Pid} = riakc_pb_socket:start_link(Host, Port),
@@ -12,6 +14,8 @@ start(Host, Port) ->
 		Exception:Reason -> {caught, Exception, Reason}
 	end.
 
+% setObject(Bucket, Key, Value)
+% {Bucket, Key, Value} as string
 setObject(Bucket, Key, Value) ->
 	try
 		[{_, Pid}] = ets:lookup(config_table, pid),
@@ -21,6 +25,8 @@ setObject(Bucket, Key, Value) ->
 		Exception:Reason -> {caught, Exception, Reason}
 	end.
 
+% getObject(Bucket, Key)
+% {Bucket, Key} as string
 getObject(Bucket, Key) ->
 	try
 		[{_, Pid}] = ets:lookup(config_table, pid),
@@ -29,6 +35,8 @@ getObject(Bucket, Key) ->
 		Exception:Reason -> {caught, Exception, Reason}
 	end.
 
+% deleteObject(Bucket, Key)
+% {Bucket, Key} as string
 deleteObject(Bucket, Key) ->
 	try
 		[{_, Pid}] = ets:lookup(config_table, pid),
@@ -37,6 +45,8 @@ deleteObject(Bucket, Key) ->
 		Exception:Reason -> {caught, Exception, Reason}
 	end.
 
+% updateObject(Bucket, Key, NewValue)
+% {Bucket, Key, NewValue} as string
 updateObject(Bucket, Key, NewValue) ->
 	try
 		[{_, Pid}] = ets:lookup(config_table, pid),
