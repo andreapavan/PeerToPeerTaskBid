@@ -19,7 +19,7 @@ start(Host, Port) ->
 setObject(Bucket, Key, Value) ->
 	try
 		[{_, Pid}] = ets:lookup(config_table, pid),
-		Obj = riakc_obj:new(atom_to_binary(Bucket, latin1), atom_to_binary(Key, latin1), Value),
+		Obj = riakc_obj:new(atom_to_binary(Bucket, latin1), Key, Value),
 		riakc_pb_socket:put(Pid, Obj)
 	catch
 		Exception:Reason -> {caught, Exception, Reason}
@@ -30,7 +30,7 @@ setObject(Bucket, Key, Value) ->
 getObject(Bucket, Key) ->
 	try
 		[{_, Pid}] = ets:lookup(config_table, pid),
-		{ok, Obj} = riakc_pb_socket:get(Pid, atom_to_binary(Bucket, latin1), atom_to_binary(Key, latin1))
+		{ok, Obj} = riakc_pb_socket:get(Pid, atom_to_binary(Bucket, latin1), Key)
 	catch
 		Exception:Reason -> {caught, Exception, Reason}
 	end.
@@ -40,7 +40,7 @@ getObject(Bucket, Key) ->
 deleteObject(Bucket, Key) ->
 	try
 		[{_, Pid}] = ets:lookup(config_table, pid),
-		riakc_pb_socket:delete(Pid, atom_to_binary(Bucket, latin1), atom_to_binary(Key, latin1))
+		riakc_pb_socket:delete(Pid, atom_to_binary(Bucket, latin1), Key)
 	catch
 		Exception:Reason -> {caught, Exception, Reason}
 	end.
@@ -50,7 +50,7 @@ deleteObject(Bucket, Key) ->
 updateObject(Bucket, Key, NewValue) ->
 	try
 		[{_, Pid}] = ets:lookup(config_table, pid),
-		{ok, Oa} = riakc_pb_socket:get(Pid, atom_to_binary(Bucket, latin1), atom_to_binary(Key, latin1)),
+		{ok, Oa} = riakc_pb_socket:get(Pid, atom_to_binary(Bucket, latin1), Key),
 		Ob = riakc_obj:update_value(Oa, NewValue),
 		{ok, Oc} = riakc_pb_socket:put(Pid, Ob, [return_body])
 	catch
