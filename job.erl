@@ -10,7 +10,7 @@
 
 % addJob(Owner, Core, Ram, Disk, JobCost)
 % {Owner} as Node (ex. 'node@machine')
-% {Core, Ram, Disk, JobCost} as string
+% {Core, Ram, Disk, JobCost} as integer
 addJob(Owner, Core, Ram, Disk, JobCost) ->
 	try
 		JobInfo1 = #job_info{owner=Owner, core=Core, ram=Ram, disk=Disk, job_cost=JobCost},
