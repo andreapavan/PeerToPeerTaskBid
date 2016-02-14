@@ -1,4 +1,4 @@
--module(node).
+-module(message).
 -behaviour(gen_server).
 
 %% Export node functions

@@ -1,5 +1,5 @@
 -module(main).
--export([join/0, submitJob/4]).
+-export([join/0, submitJob/4, openCommunication/1, startJob/0]).
 
 
 join()-> 
@@ -7,5 +7,19 @@ join()->
 	{NewPort, _} = string:to_integer(RiakPort),
 	riak:start(RiakAddress, NewPort).
 
-submitJob(Core, Ram, Disk, JobCost)-> {ok}.
+submitJob(_Core, _Ram, _Disk, _JobCost)-> {ok}.
 	%%job:addJob('andrea2@home', Core, Ram, Disk, JobCost).
+
+monitorNode(NodeName)->
+	% Spawn a new process to receive the message from monitoring
+	spawn(fun()->
+		erlang:monitor_node(NodeName, true),
+		% receive messages
+		receive
+			% if node is down ... 
+			{nodedown, _} -> io:format("Nodo morto~n", [])
+		end
+	end).
+
+startJob() ->
+	io:format("Job iniziato~n", []).
