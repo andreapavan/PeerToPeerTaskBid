@@ -1,0 +1,2 @@
+-module(node).
+-export([addNode/5, listNode/0, getNodeDetail/1, updateNode/1]).
