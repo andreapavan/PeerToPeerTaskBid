@@ -1,5 +1,5 @@
 -module(main).
--export([join/0, submitJob/4, openCommunication/1, startJob/0]).
+-export([join/0, submitJob/4, monitorNode/1, startJob/0]).
 
 
 join()-> 
