@@ -1,5 +1,5 @@
 -module(node).
--export([addNode/6, listNode/0, getNodeDetail/1, updateNode/6]).
+-export([addNode/6, listNode/0, getNodeDetail/1, updateNode/6, cleanNode/0]).
 
 -record(node_info,
 	{status="",
@@ -49,4 +49,14 @@ updateNode(Key, Status, Core, Ram, Disk, Price) ->
 	catch
 		Exception:Reason -> {caught, Exception, Reason}
 	end.
+
+% cleanNode()
+% cleans all Node recursively - USED IN DEBUG MODE
+cleanNode() ->
+	{_, NodeList} = node:listNode(),
+	doCleanNode(NodeList).
+
+% handling the recursive clean process
+doCleanNode([H|T]) -> riak:deleteObject('Node', H), doCleanNode(T);
+doCleanNode([]) -> true.
 

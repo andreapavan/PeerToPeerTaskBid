@@ -1,5 +1,5 @@
 -module(main).
--export([join/0, submitJob/4, monitorNode/1, startJob/0]).
+-export([join/0, submitJob/4, monitorNode/1, startJob/0, cleanDHT/0]).
 
 
 join()-> 
@@ -23,3 +23,9 @@ monitorNode(NodeName)->
 
 startJob() ->
 	io:format("Job iniziato~n", []).
+
+% cleanDHT()
+% cleans the DHT from all the values, used only for DEBUG purposes
+cleanDHT() ->
+	job:cleanJob(),
+	node:cleanNode().

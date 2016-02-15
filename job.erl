@@ -1,5 +1,5 @@
 -module(job).
--export([addJob/6, listJob/0, getJobDetail/1, updateJobStatus/2]).
+-export([addJob/6, listJob/0, getJobDetail/1, updateJobStatus/2, cleanJob/0]).
 
 -record(job_info,
 	{status="",
@@ -50,4 +50,14 @@ updateJobStatus(Key, Status) ->
 	catch
 		Exception:Reason -> {caught, Exception, Reason}
 	end.
+
+% cleanJob()
+% cleans all Job recursively - USED IN DEBUG MODE
+cleanJob() ->
+	{_, JobList} = job:listJob(),
+	doCleanJob(JobList).
+
+% handling the recursive clean process
+doCleanJob([H|T]) -> riak:deleteObject('Job', H), doCleanJob(T);
+doCleanJob([]) -> true.
 
