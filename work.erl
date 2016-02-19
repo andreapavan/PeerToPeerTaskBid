@@ -28,6 +28,9 @@ waitingForMessage() ->
 	{cancel, NodeTo, JobId}->
       		io:format("Canceled job id ~p for node ~p.~n", [JobId, NodeTo]),
 		work:waitingForMessage();
+	{down, NodeDown, JobId}->
+      		io:format("The node ~p working on job id ~p is DOWN!!!!!!!!! ~n", [NodeDown, JobId]),
+		work:waitingForMessage();
 	{complete, NodeTo, JobId}->
       		io:format("Completed job id ~p for node ~p.~n", [JobId, NodeTo]),
 		work:waitingForMessage();
@@ -44,6 +47,9 @@ sendStartWork(NodeTo, JobId) ->
 
 sendCancelWork(NodeTo, JobId) -> 
 	{NodeTo, NodeTo} ! {cancel, node(), JobId}.
+
+sendDownWork(NodeDown, JobId) ->
+	{node(), node()} ! {down, NodeDown, JobId}.
 
 sendCompleteWork(NodeTo, JobId) -> 
 	{NodeTo, NodeTo} ! {complete, node(), JobId}.

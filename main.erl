@@ -5,7 +5,8 @@
 join()-> 
 	[RiakAddress,RiakPort] = init:get_plain_arguments(),
 	{NewPort, _} = string:to_integer(RiakPort),
-	riak:start(RiakAddress, NewPort).
+	riak:start(RiakAddress, NewPort),
+	work:start().
 
 submitJob(_Core, _Ram, _Disk, _JobCost)-> {ok}.
 	%%job:addJob('andrea2@home', Core, Ram, Disk, JobCost).
@@ -17,7 +18,8 @@ monitorNode(NodeName)->
 		% receive messages
 		receive
 			% if node is down ... 
-			{nodedown, _} -> io:format("Nodo morto~n", [])
+			{nodedown, NodeDown} -> io:format("Nodo morto~n", []),
+			work:sendDownWork(NodeDown, '123')
 		end
 	end).
 
