@@ -39,7 +39,8 @@ monitorNode(NodeName, _JobKey)->
 		receive
 			% if node is down ... 
 			{nodedown, NodeDown} -> io:format("Nodo morto~n", []),
-			work:sendDownWork(NodeDown, '123')
+			work:sendDownWork(NodeDown, '123'),
+			node:updateNodeStatus(atom_to_binary(NodeDown, latin1), "down")
 		end
 	end).
 
