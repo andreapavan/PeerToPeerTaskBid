@@ -25,16 +25,16 @@ submitJob(Core, Ram, Disk, JobCost)->
 checkJob(JobKey) ->
 	% check if there is a node able to run an existing job
 	Node = policy:computeWorker(JobKey),
-	monitorNode(Node#node_info.key, JobKey).
+	monitorNode(Node, JobKey).
 
 monitorNode(null, JobKey) -> 
-	io:format("Nessun nodo attulmente disponibile ~nRiprova piu tardi jobKey: ~p", [JobKey]),
+	io:format("Nessun nodo attulmente disponibile ~nRiprova piu tardi jobKey: ~p~n", [JobKey]),
 	JobKey;
 
 monitorNode(NodeName, _JobKey)->
 	% Spawn a new process to receive the message from monitoring
 	spawn(fun()->
-		erlang:monitor_node(NodeName, true),
+		erlang:monitor_node(NodeName#node_info.key, true),
 		% receive messages
 		receive
 			% if node is down ... 
