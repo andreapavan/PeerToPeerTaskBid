@@ -19,11 +19,12 @@ stop() ->
  
 waitingForMessage() ->
 	receive
-    	{new, NodeTo, JobKey}->
-      		io:format("New job id ~p from node ~p.~n", [JobKey, NodeTo]),
-		work:waitingForMessage();
 	{start, NodeTo, JobKey}->
       		io:format("Start working on job id ~p for node ~p.~n", [JobKey, NodeTo]),
+		% update myself: remove resources used byt my job and set myself to working status
+		node:updateNode(node(), "working", 0, 0, 0, 0),
+		job:updateJobStatus(JobKey, "running"),
+		main:monitorNode(NodeTo, JobKey),
 		work:waitingForMessage();
 	{cancel, NodeTo, JobKey}->
       		io:format("Canceled job id ~p for node ~p.~n", [JobKey, NodeTo]),
@@ -40,9 +41,6 @@ waitingForMessage() ->
       		io:format("Oops received: ~p~n", [Oops]),
       		work:waitingForMessage()
 	end.
-
-sendNewWork(NodeTo, JobId) -> 
-	{NodeTo, NodeTo} ! {new, node(), JobId}.
 
 sendStartWork(NodeTo, JobId) -> 
 	{NodeTo, NodeTo} ! {start, node(), JobId}.

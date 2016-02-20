@@ -1,5 +1,5 @@
 -module(main).
--export([join/4, submitJob/4, checkJob/1, startJob/0, cleanDHT/0]).
+-export([join/4, submitJob/4, checkJob/1, monitorNode/2, cleanDHT/0]).
 
 -include_lib("includes/record_definition.hrl").
 
@@ -25,7 +25,8 @@ submitJob(Core, Ram, Disk, JobCost)->
 checkJob(JobKey) ->
 	% check if there is a node able to run an existing job
 	Node = policy:computeWorker(JobKey),
-	monitorNode(Node, JobKey).
+	monitorNode(Node, JobKey),
+	startJob(Node, JobKey).
 
 monitorNode(null, JobKey) -> 
 	io:format("Nessun nodo attulmente disponibile ~nRiprova piu tardi jobKey: ~p~n", [JobKey]),
@@ -43,9 +44,11 @@ monitorNode(NodeName, JobKey)->
 		end
 	end).
 
+startJob(null, _JobKey) -> {ok};
 
-startJob() ->
-	io:format("Job iniziato~n", []).
+startJob(Node, JobKey) ->
+	io:format("Job iniziato~n", []),
+	work:sendStartWork(Node, JobKey).
 
 % cleanDHT()
 % cleans the DHT from all the values, used only for DEBUG purposes
