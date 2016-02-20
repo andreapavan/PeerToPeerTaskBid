@@ -19,20 +19,22 @@ stop() ->
  
 waitingForMessage() ->
 	receive
-    	{new, NodeTo, JobId}->
-      		io:format("New job id ~p from node ~p.~n", [JobId, NodeTo]),
+    	{new, NodeTo, JobKey}->
+      		io:format("New job id ~p from node ~p.~n", [JobKey, NodeTo]),
 		work:waitingForMessage();
-	{start, NodeTo, JobId}->
-      		io:format("Start working on job id ~p for node ~p.~n", [JobId, NodeTo]),
+	{start, NodeTo, JobKey}->
+      		io:format("Start working on job id ~p for node ~p.~n", [JobKey, NodeTo]),
 		work:waitingForMessage();
-	{cancel, NodeTo, JobId}->
-      		io:format("Canceled job id ~p for node ~p.~n", [JobId, NodeTo]),
+	{cancel, NodeTo, JobKey}->
+      		io:format("Canceled job id ~p for node ~p.~n", [JobKey, NodeTo]),
 		work:waitingForMessage();
-	{down, NodeDown, JobId}->
-      		io:format("The node ~p working on job id ~p is DOWN!!!!!!!!! ~n", [NodeDown, JobId]),
+	{down, NodeDown, JobKey}->
+      		io:format("The node ~p working on job id ~p is DOWN!!!!!!!!! ~n", [NodeDown, JobKey]),
+		node:updateNodeStatus(atom_to_binary(NodeDown, latin1), "down"),
+		job:updateJobStatus(JobKey, "down"),
 		work:waitingForMessage();
-	{complete, NodeTo, JobId}->
-      		io:format("Completed job id ~p for node ~p.~n", [JobId, NodeTo]),
+	{complete, NodeTo, JobKey}->
+      		io:format("Completed job id ~p for node ~p.~n", [JobKey, NodeTo]),
 		work:waitingForMessage();
     	Oops ->
       		io:format("Oops received: ~p~n", [Oops]),

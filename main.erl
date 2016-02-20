@@ -31,16 +31,15 @@ monitorNode(null, JobKey) ->
 	io:format("Nessun nodo attulmente disponibile ~nRiprova piu tardi jobKey: ~p~n", [JobKey]),
 	JobKey;
 
-monitorNode(NodeName, _JobKey)->
+monitorNode(NodeName, JobKey)->
 	% Spawn a new process to receive the message from monitoring
 	spawn(fun()->
 		erlang:monitor_node(NodeName#node_info.key, true),
 		% receive messages
 		receive
-			% if node is down ... 
-			{nodedown, NodeDown} -> io:format("Nodo morto~n", []),
-			work:sendDownWork(NodeDown, '123'),
-			node:updateNodeStatus(atom_to_binary(NodeDown, latin1), "down")
+			% if node is down ...
+			{nodedown, NodeDown} -> 
+				work:sendDownWork(NodeDown, JobKey)
 		end
 	end).
 
