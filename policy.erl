@@ -1,20 +1,8 @@
 -module(policy).
 -export([computeWorker/1]).
 
--record(node_info,
-	{status="",
-	core=1,
-	ram=1,
-	disk=1,
-	price=1}).
+-include_lib("includes/record_definition.hrl").
 
--record(job_info,
-	{status="",
-	owner="",
-	core=1,
-	ram=1,
-	disk=1,
-	job_cost=1}).
 
 computeWorker(Key) ->
 	try
@@ -32,7 +20,7 @@ if
 	CurNode#node_info.core >= Job#job_info.core,
 	CurNode#node_info.ram >= Job#job_info.ram,
 	CurNode#node_info.disk >= Job#job_info.disk ->
-		verifyNode(Job, T, [H|ValidNodes]);
+		verifyNode(Job, T, [CurNode|ValidNodes]);
 	true ->
 		verifyNode(Job, T, ValidNodes)
 end;

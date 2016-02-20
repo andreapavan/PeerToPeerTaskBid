@@ -1,13 +1,7 @@
 -module(job).
 -export([addJob/6, listJob/0, getJobDetail/1, updateJobStatus/2, cleanJob/0]).
 
--record(job_info,
-	{status="",
-	owner="",
-	core=1,
-	ram=1,
-	disk=1,
-	job_cost=1}).
+-include_lib("includes/record_definition.hrl").
 
 % addJob(Status, Owner, Core, Ram, Disk, JobCost)
 % {Status} as String

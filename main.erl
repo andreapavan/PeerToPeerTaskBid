@@ -1,6 +1,8 @@
 -module(main).
 -export([join/4, submitJob/4, checkJob/1, startJob/0, cleanDHT/0]).
 
+-include_lib("includes/record_definition.hrl").
+
 
 % join(Core, Ram, Disk, Price)
 % joins the job scheduling network by registering the node
@@ -23,7 +25,7 @@ submitJob(Core, Ram, Disk, JobCost)->
 checkJob(JobKey) ->
 	% check if there is a node able to run an existing job
 	Node = policy:computeWorker(JobKey),
-	monitorNode(binary_to_atom(Node, latin1), JobKey).
+	monitorNode(Node#node_info.key, JobKey).
 
 monitorNode(null, JobKey) -> 
 	io:format("Nessun nodo attulmente disponibile ~nRiprova piu tardi jobKey: ~p", [JobKey]),
