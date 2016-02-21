@@ -17,6 +17,7 @@ computeWorker(Key) ->
 verifyNode(Job, [H|T], ValidNodes) ->
 CurNode = node:getNodeDetail(H),
 if
+	CurNode#node_info.key /= Job#job_info.owner,
 	CurNode#node_info.status /= "down",
 	CurNode#node_info.core >= Job#job_info.core,
 	CurNode#node_info.ram >= Job#job_info.ram,

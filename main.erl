@@ -23,19 +23,33 @@ submitJob(Core, Ram, Disk, JobCost)->
 	checkJob(JobKey).
 
 checkJob(JobKey) ->
-	% check if there is a node able to run an existing job
-	Node = policy:computeWorker(JobKey),
-	monitorNode(Node, JobKey),
-	startJob(Node, JobKey).
+	% check if Job is running (not allowed to reassign a working job)
+	JobObj = job:getJobDetail(JobKey),
 
-monitorNode(null, JobKey) -> 
-	io:format("Nessun nodo attulmente disponibile ~nRiprova piu tardi jobKey: ~p~n", [JobKey]),
-	JobKey;
+	if JobObj#job_info.owner /= node() ->
+		io:format("You're not the owner of this job ~n", []);
+	JobObj#job_info.status == "running" ->
+		io:format("The job is already running ~n", []);
+	true ->
+		% check if there is a node able to run an existing job
+		Node = policy:computeWorker(JobKey),
+		if Node /= null ->
+			monitorNode(Node#node_info.key, JobKey),
+			startJob(Node, JobKey);
+		true ->
+			io:format("Nessun nodo attulmente disponibile ~nRiprova piu tardi jobKey: ~p~n", [JobKey]),
+			JobKey
+		end
+		
+	end.
+	
 
-monitorNode(NodeName, JobKey)->
+	
+
+monitorNode(Node, JobKey)->
 	% Spawn a new process to receive the message from monitoring
 	spawn(fun()->
-		erlang:monitor_node(NodeName#node_info.key, true),
+		erlang:monitor_node(Node, true),
 		% receive messages
 		receive
 			% if node is down ...
@@ -43,8 +57,6 @@ monitorNode(NodeName, JobKey)->
 				work:sendDownWork(NodeDown, JobKey)
 		end
 	end).
-
-startJob(null, _JobKey) -> {ok};
 
 startJob(Node, JobKey) ->
 	io:format("Job iniziato~n", []),

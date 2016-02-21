@@ -1,5 +1,7 @@
 -module(work).
 -compile(export_all).
+
+-include_lib("includes/record_definition.hrl").
  
 start() ->
 	try
@@ -22,7 +24,13 @@ waitingForMessage() ->
 	{start, NodeTo, JobKey}->
       		io:format("Start working on job id ~p for node ~p.~n", [JobKey, NodeTo]),
 		% update myself: remove resources used byt my job and set myself to working status
-		node:updateNode(node(), "working", 0, 0, 0, 0),
+		JobObj = job:getJobDetail(JobKey),
+		NodeObj = node:getNodeDetail(atom_to_binary(node(), latin1)),
+		node:updateNode(atom_to_binary(node(), latin1), "working", 
+			NodeObj#node_info.core - JobObj#job_info.core, 
+			NodeObj#node_info.ram - JobObj#job_info.ram, 
+			NodeObj#node_info.disk - JobObj#job_info.disk, 
+			NodeObj#node_info.price),
 		job:updateJobStatus(JobKey, "running"),
 		main:monitorNode(NodeTo, JobKey),
 		work:waitingForMessage();
@@ -42,8 +50,8 @@ waitingForMessage() ->
       		work:waitingForMessage()
 	end.
 
-sendStartWork(NodeTo, JobId) -> 
-	{NodeTo, NodeTo} ! {start, node(), JobId}.
+sendStartWork(NodeTo, JobId) ->
+	{NodeTo#node_info.key, NodeTo#node_info.key} ! {start, node(), JobId}.
 
 sendCancelWork(NodeTo, JobId) -> 
 	{NodeTo, NodeTo} ! {cancel, node(), JobId}.
