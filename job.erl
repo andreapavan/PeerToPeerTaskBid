@@ -1,5 +1,5 @@
 -module(job).
--export([addJob/6, listJob/0, getJobDetail/1, updateJobStatus/2, cleanJob/0]).
+-export([addJob/6, listJob/0, getJobDetail/1, updateJobStatus/2, getFirstReadyJob/0, cleanJob/0]).
 
 -include_lib("includes/record_definition.hrl").
 
@@ -39,11 +39,37 @@ getJobDetail(Key) ->
 updateJobStatus(Key, Status) ->
 	try
 		Obj = job:getJobDetail(Key),
-		UpdJpb = #job_info{status=Status, owner=Obj#job_info.owner, core=Obj#job_info.core, ram=Obj#job_info.ram, disk=Obj#job_info.disk, job_cost=Obj#job_info.job_cost},
-		riak:updateObject('Job', Key, term_to_binary(UpdJpb))
+		if Obj#job_info.status /= "completed" -> 
+			UpdJpb = #job_info{status=Status, 
+				owner=Obj#job_info.owner, 
+				core=Obj#job_info.core, 
+				ram=Obj#job_info.ram, 
+				disk=Obj#job_info.disk,
+				job_cost=Obj#job_info.job_cost},
+			riak:updateObject('Job', Key, term_to_binary(UpdJpb))
+		end
 	catch
 		Exception:Reason -> {caught, Exception, Reason}
 	end.
+
+
+getFirstReadyJob() ->
+	{_, JobList} = job:listJob(),
+	getFirstReadyJob(JobList).
+
+
+getFirstReadyJob([H|T]) -> 
+	Obj = job:getJobDetail(H),
+	if Obj#job_info.status /= "completed",
+		Obj#job_info.status /= "running",
+		Obj#job_info.owner == node() ->
+		H;
+	true -> 
+		getFirstReadyJob(T)
+	end;
+getFirstReadyJob([]) -> false.
+
+
 
 % cleanJob()
 % cleans all Job recursively - USED IN DEBUG MODE

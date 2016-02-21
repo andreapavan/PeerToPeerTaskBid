@@ -1,5 +1,5 @@
 -module(main).
--export([join/4, submitJob/4, checkJob/1, monitorNode/2, cleanDHT/0]).
+-export([join/4, submitJob/4, checkJob/0, checkJob/1, monitorNode/2, cleanDHT/0]).
 
 -include_lib("includes/record_definition.hrl").
 
@@ -22,6 +22,12 @@ submitJob(Core, Ram, Disk, JobCost)->
 	% check if there is a node able to run the new job
 	checkJob(JobKey).
 
+checkJob() ->
+	checkJob(job:getFirstReadyJob()).
+
+checkJob(false) -> 
+	io:format("Invalid job ~n");
+
 checkJob(JobKey) ->
 	% check if Job is running (not allowed to reassign a working job)
 	JobObj = job:getJobDetail(JobKey),
@@ -30,6 +36,8 @@ checkJob(JobKey) ->
 		io:format("You're not the owner of this job ~n", []);
 	JobObj#job_info.status == "running" ->
 		io:format("The job is already running ~n", []);
+	JobObj#job_info.status == "completed" ->
+		io:format("The job is already completed ~n", []);
 	true ->
 		% check if there is a node able to run an existing job
 		Node = policy:computeWorker(JobKey),
