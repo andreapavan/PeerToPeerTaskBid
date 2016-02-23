@@ -2,7 +2,9 @@
 -compile(export_all).
 
 -include_lib("includes/record_definition.hrl").
- 
+
+% start()
+% register a new process with the name (same of the node) and listen to incoming messages
 start() ->
 	try
   		register(node(), spawn(node(), ?MODULE, waitingForMessage, []))
@@ -10,7 +12,8 @@ start() ->
 		Exception:Reason -> {caught, Exception, Reason}
 	end.
 
-
+% stop()
+% exits the current listening process by killig the processs
 stop() ->
 	try
   		exit(self(), kill)
@@ -19,6 +22,7 @@ stop() ->
 	end.
 
 
+% waitingForMessage()
 % handling incoming messages
 waitingForMessage() ->
 	receive
@@ -26,9 +30,9 @@ waitingForMessage() ->
       		io:format("Start working on job id ~p for node ~p.~n", [JobKey, NodeTo]),
 		% update myself: remove resources used by the assigned job and set myself to working status
 		workerAllocateResources(JobKey),
-		% job runnin
+		% job running
 		job:updateJobStatus(JobKey, "running"),
-		% monitor the owner of the job
+		% monitor the owner of the job so I can update Riak if it's going down
 		main:monitorNode(NodeTo, JobKey),
 		work:waitingForMessage();
 	{cancel, NodeTo, JobKey}->
@@ -36,8 +40,10 @@ waitingForMessage() ->
 		work:waitingForMessage();
 	{down, NodeDown, JobKey}->
       		io:format("The node ~p working on job id ~p is DOWN!!!!!!!!! ~n", [NodeDown, JobKey]),
+		% the node is down, update Riak accordingly Node and Job informations
 		node:updateNodeStatus(atom_to_binary(NodeDown, latin1), "down"),
 		job:updateJobStatus(JobKey, "down"),
+		% try to release resources (if I'm a worker)
 		workerFreeResources(JobKey),
 		work:waitingForMessage();
 	{complete, NodeTo, JobKey}->
@@ -48,28 +54,44 @@ waitingForMessage() ->
       		work:waitingForMessage()
 	end.
 
+% sendStartWork(NodeTo, JobKey)
+% --
+% ---- start can be called only by owner ----
+% --
 sendStartWork(NodeTo, JobKey) ->
-	% send can be called only by owner
-
 	{NodeTo#node_info.key, NodeTo#node_info.key} ! {start, node(), JobKey}.
 
-sendCancelWork(NodeTo, JobKey) -> 
-	% cancel can be called only by worker
-
+% sendCancelWork(NodeTo, JobKey)
+% --
+% ---- cancel can be called only by worker ----
+% --
+sendCancelWork(NodeTo, JobKey) ->
 	workerFreeResources(JobKey),
+	% set Job as ready since I'm no longer working on this...
 	job:updateJobStatus(JobKey, "ready"),
 	{NodeTo, NodeTo} ! {cancel, node(), JobKey}.
 
+% sendDownWork(NodeDown, JobKey)
+% --
+% ---- down must be called only by the system itself (automatic handled) ----
+% --
 sendDownWork(NodeDown, JobKey) ->
 	% down must be called only by the system
 	{node(), node()} ! {down, NodeDown, JobKey}.
 
+% sendCompleteWork(NodeTo, JobKey)
+% --
+% ---- complete can be called only by worker ----
+% --
 sendCompleteWork(NodeTo, JobKey) -> 
-	% complete can be called only by worker
 	workerFreeResources(JobKey),
+	% set Job as completed since I finished working on this
 	job:updateJobStatus(JobKey, "completed"),
 	{NodeTo, NodeTo} ! {complete, node(), JobKey}.
-	
+
+% workerAllocateResources(JobKey)
+% {Job} as Binary
+% allocate the resources of a worker (myself)
 workerAllocateResources(JobKey) ->
 	% update myself: remove resources used by the assigned job and set myself to working status
 	JobObj = job:getJobDetail(JobKey),
@@ -81,6 +103,9 @@ workerAllocateResources(JobKey) ->
 		NodeObj#node_info.disk - JobObj#job_info.disk, 
 		NodeObj#node_info.price).
 
+% workerFreeResources(JobKey)
+% {Job} as Binary
+% release the resources of a worker (myself)
 workerFreeResources(JobKey) ->
 	% update myself: add resources used by the assigned job
 	JobObj = job:getJobDetail(JobKey),

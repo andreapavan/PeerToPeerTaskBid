@@ -38,7 +38,9 @@ getJobDetail(Key) ->
 % {Status} as String
 updateJobStatus(Key, Status) ->
 	try
+		% get detail of Job
 		Obj = job:getJobDetail(Key),
+		% update the job only if the status is not completed -> this is a final status and a job is not editable when this status is reached!!
 		if Obj#job_info.status /= "completed" -> 
 			UpdJpb = #job_info{status=Status, 
 				owner=Obj#job_info.owner, 
@@ -52,14 +54,17 @@ updateJobStatus(Key, Status) ->
 		Exception:Reason -> {caught, Exception, Reason}
 	end.
 
-
+% getFirstReadyJob()
 getFirstReadyJob() ->
 	{_, JobList} = job:listJob(),
 	getFirstReadyJob(JobList).
 
-
+% getFirstReadyJob(H|T)
+% {H|T} as List in Head and Tail format
 getFirstReadyJob([H|T]) -> 
+	% get detail of Job
 	Obj = job:getJobDetail(H),
+	% get the job only if status is not complete and running
 	if Obj#job_info.status /= "completed",
 		Obj#job_info.status /= "running",
 		Obj#job_info.owner == node() ->
@@ -70,14 +75,20 @@ getFirstReadyJob([H|T]) ->
 getFirstReadyJob([]) -> false.
 
 
+% --
+% ------ DEBUG METHODS ------
+% --
+
 
 % cleanJob()
-% cleans all Job recursively - USED IN DEBUG MODE
+% cleans all Job recursively
 cleanJob() ->
 	{_, JobList} = job:listJob(),
 	doCleanJob(JobList).
 
-% handling the recursive clean process
+% doCleanJob([H|T]) 
+% {H|T} as List in Head and Tail format
+% recursive cleaning of Nodes
 doCleanJob([H|T]) -> riak:deleteObject('Job', H), doCleanJob(T);
 doCleanJob([]) -> true.
 

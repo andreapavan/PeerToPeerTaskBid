@@ -59,14 +59,20 @@ updateNodeStatus(Key, Status) ->
 	end.
 
 
+% --
+% ------ DEBUG METHODS ------
+% --
+
 
 % cleanNode()
-% cleans all Node recursively - USED IN DEBUG MODE
+% cleans all Node recursively
 cleanNode() ->
 	{_, NodeList} = node:listNode(),
 	doCleanNode(NodeList).
 
-% handling the recursive clean process
+% doCleanNode([H|T]) 
+% {H|T} as List in Head and Tail format
+% recursive cleaning of Nodes
 doCleanNode([H|T]) -> riak:deleteObject('Node', H), doCleanNode(T);
 doCleanNode([]) -> true.
 
